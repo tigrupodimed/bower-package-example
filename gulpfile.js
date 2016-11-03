@@ -13,6 +13,7 @@ var es = require('event-stream');
 var angularFilesort = require('gulp-angular-filesort');
 var less = require('gulp-less');
 var concat = require('gulp-concat');
+var ngHtml2Js = require("gulp-ng-html2js");
 
 var htmlFiles = ['./src/**/**/*.html', '!./src/index.html'];
 var jsFiles = ['./src/**/**/*.js', '!./src/**/*.test.js'];
@@ -69,9 +70,27 @@ gulp.task('dist', ['dist:html'], function () {
     .pipe(concat('bower-package-example.min.js'))
     .pipe(gulp.dest('dist/'));
 
+  var templateStream = gulp.src(htmlFiles)
+    .pipe(ngHtml2Js({
+        moduleName: "app.widgets"
+    }))
+    .pipe(concat("app.widgets.templates.min.js"))
+    .pipe(uglify())
+    .pipe(gulp.dest("./dist"));
+
   return gulp.src('./src/index.html')
-    .pipe(inject(es.merge(lessStream, jsStream), { ignorePath: 'dist/', addRootSlash: false }))
+    .pipe(inject(es.merge(lessStream, jsStream, templateStream), { ignorePath: 'dist/', addRootSlash: false }))
     .pipe(gulp.dest('./dist'));
+});
+
+gulp.task('dist:templates', function () {
+  gulp.src(htmlFiles)
+    .pipe(ngHtml2Js({
+        moduleName: "app.widgets"
+    }))
+    .pipe(concat("app.widgets.templates.min.js"))
+    .pipe(uglify())
+    .pipe(gulp.dest("./dist"));
 });
 
 gulp.task('watch', function() {
